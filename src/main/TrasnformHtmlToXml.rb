@@ -1,3 +1,4 @@
+# Declaración de gemas utilizadas de Ruby
 require 'rubygems'
 require 'nokogiri'
 require 'open-uri'
@@ -10,9 +11,13 @@ DEFAULT_INDENT = 2
 
 # Hash que contiene las etiquetas a procesar
 $process_tags = {title: 'title', body: 'content', h1: 'header', h2: 'header', h3: 'header', h4: 'header',
-                 h5: 'header', h6: 'header', p: 'para', i: 'para', b: 'para', strong: 'para', table: 'table',
-                 tr: 'row', th: 'col', td: 'col', ul: 'list', ol: 'list', li: 'value', select: "select",
-                 option: "option", input: "input", link: "link", meta: "meta"}
+                 h5: 'header', h6: 'header', p: 'para', i: 'cursive', b: 'bold', u: 'sub', strong: 'bold',
+                 table: 'table', tr: 'row', th: 'col', td: 'col', ul: 'list', ol: 'list', li: 'value',
+                 select: "select", option: "option", input: "input", link: "link", a: "link", meta: "meta",
+                 div: "div", span: "span", center: "center", form: "form", nobr: "nobr", img: "image"}
+
+# Variable global que contiene los tags procesados
+$tags = Hash.new(0)
 
 Nokogiri::XML::Node.class_eval do
   # Print every Node by default (will be overridden by CharacterData)
@@ -42,135 +47,71 @@ Nokogiri::XML::Node.class_eval do
   end
 end
 
-def create_xml_file(file_name)
-  builder = Nokogiri::XML::Builder.new do |xml|
-    xml.root
-  end
-end
-
 def parse_xml_file(file_name)
+  # se abre y se crea el fichero pasado por parámetro
   f = File.read(file_name)
+  # se devuelve un elemento Nokogiri::XML en formato UTF_8
   Nokogiri::XML(f,nil, Encoding::UTF_8.to_s)
 end
 
-
 def parse_children(children, doc)
+
+  # se corre los hijos del nodo pasado por parámetro
   children.each do |child|
     case child
     when Nokogiri::XML::Text
+      # no se establece el contenido
       #child.content = child.content.strip + "A"
-    when Nokogiri::XML::Element
-            name = $process_tags.has_key?(child.name.to_sym) ? $process_tags.fetch(child.name.to_sym) : child.name
+    when Nokogiri::XML::Element # Solo se procesan los elementos
 
+      # Se comprueba que el nodo se encuentra dentro del tags a procesar
+      if ($process_tags.has_key?(child.name.to_sym))
 
-            new_element = Nokogiri::XML::Node.new(name, doc)
-            case child.name
-            when "table", "tr", "ul", "ol", "select"
-              new_element.content = ""
-            when "input", "link", "meta"
-              add_content_input(child)
-            else
-              new_element.content = child.content
-            end
+        # se incrementa el contador de los tags procesados
+        $tags[child.name] += 1
 
-            doc.add_child(new_element)
+        # Se comprueba si está dentro de la lista de tags a procesar para establecer su sinónimo
+        name = $process_tags.has_key?(child.name.to_sym) ? $process_tags.fetch(child.name.to_sym) : child.name
 
+        # se crea un nuevo elemento
+        new_element = Nokogiri::XML::Node.new(name, doc)
 
-        parse_children(child.children, new_element)
-    end
-  end
-end
-
-def add_element(doc, node)
-  new_element = Nokogiri::XML::Node.new(node.name, doc)
-  new_element.content = node.content
-  doc.root.add_child(new_element)
-end
-
-def add_common_root_element(doc, node, name)
-  new_element = Nokogiri::XML::Node.new(name, doc)
-  new_element.content = node.content
-  doc.root.add_child(new_element)
-end
-
-def add_common_element(doc, node, name)
-  new_element = Nokogiri::XML::Node.new(name, doc)
-  new_element.content = node.content
-  doc.add_child(new_element)
-end
-
-def add_element_table(doc, node, name)
-  # Se crea el elemento table
-  table = Nokogiri::XML::Node.new(name, doc)
-
-  if (node.children)
-    node.children.each do |row|
-      next unless row.is_a? (Nokogiri::XML::Element)
-
-      # se crea el elemento row
-      tr = Nokogiri::XML::Node.new($process_tags.fetch(row.name.to_sym), table)
-
-      if (row.children)
-        row.children.each do |para|
-          next unless para.is_a? (Nokogiri::XML::Element)
-          # se crea la columna
-          add_common_element(tr, para, $process_tags.fetch(para.name.to_sym))
+        case child.name
+        when "table", "tr", "ul", "ol", "select", "form"
+          # Para las etiquetas de está clausula no se añade contenido
+          new_element.content = ""
+        when "input", "link", "meta", "img"
+          # se añade el contenido de los tags
+          add_content_input(child, new_element)
+        else
+          # se establece el contenido del hijo
+          new_element.content = child.content
         end
+
+        # Se añade el nuevo elemento al nodo procesado
+        doc.add_child(new_element)
       end
-      table.add_child(tr)
+
+      # Se llama recurivamente a los hijos del elemento procesado
+      parse_children(child.children, new_element)
     end
   end
-
-  doc.root.add_child(table)
-end
-
-
-def add_element_list(doc, node, name)
-  # Se crea el elemento list
-  list = Nokogiri::XML::Node.new(name, doc)
-
-  if (node.children)
-    node.children.each do |val|
-      next unless val.is_a? (Nokogiri::XML::Element)
-      # se crea el elemento value
-      add_common_element(list, val, $process_tags.fetch(val.name.to_sym))
-    end
-  end
-
-  doc.root.add_child(list)
 end
 
 def add_common_value_element(doc, value, name)
+  # se crea un nuevo elmento
   new_element = Nokogiri::XML::Node.new(name, doc)
+  # se establece el contenido al elemento
   new_element.content = value
+  # se añade el elemento como hijo
   doc.add_child(new_element)
 end
 
-def add_element_input(doc, node, name)
-  # Se crea el elemento input
-  input = Nokogiri::XML::Node.new(name, doc)
-
+def add_content_input(node, doc)
   if (node.attributes)
     node.attributes.each do |k, v|
-
       # se crea el elemento attr
-      add_common_value_element(input, v, k)
-
-    end
-  end
-
-  doc.root.add_child(input)
-end
-
-
-def add_content_input(node)
-
-  if (node.attributes)
-    node.attributes.each do |k, v|
-
-      # se crea el elemento attr
-      add_common_value_element(node, v, k)
-
+      add_common_value_element(doc, v, k)
     end
   end
 end
@@ -178,16 +119,15 @@ end
 ##
 # Se comprueba que se introduce el fichero por parámetro
 unless ARGV[0]
-  print "Es necesario pasar un fichero por parámetro"
+  print "Es necesario pasar un fichero o una URL en el primer parámetro"
   exit
 end
 
+# Se recorren los argumentos pasados
 ARGV.each do |file|
 
   # page = Nokogiri::HTML(open("http://en.wikipedia.org/"))
   page = Nokogiri::HTML(open(file), nil, Encoding::UTF_8.to_s)
-  puts page.class   # => Nokogiri::HTML::Document
-  puts page.css('title')
 
   # puts page.search('*').map(&:name)
   filename = "../../resources/result.xml"
@@ -196,21 +136,6 @@ ARGV.each do |file|
   # Se abre el documento xml
   doc = parse_xml_file(filename)
 
-  # doc = create_xml_file(filename)
-
-  page.root.elements.each do |node|
-    next unless node.is_a?(Nokogiri::XML::Element)
-
-    if(node.children)
-      node.children.each do |child|
-        next unless child.is_a?(Nokogiri::XML::Element)
-      end
-    end
-
-    puts node.name
-  end
-
-
   page.root.elements.each do |node|
     next unless node.is_a?(Nokogiri::XML::Element)
 
@@ -218,59 +143,23 @@ ARGV.each do |file|
     # new_element.content = node.content
     doc.root.add_child(new_element)
     parse_children(node.children, new_element)
+
+    $tags[node.name] += 1
   end
 
 
-  tags = Hash.new(0)
-
-=begin
-  page.traverse do |node|
-    next unless node.is_a?(Nokogiri::XML::Element)
-
-    # print "#{node.name} **** #{node.text}...... #{node.values} ---- #{node.attributes}\n"
-    # File.write('examples.xml', node.to_xml(:indent => 5, :encoding => 'UTF-8'))
-
-    # Se comprueba que el nodo se encuentra dentro del tags a procesar
-    if ($process_tags.has_key?(node.name.to_sym))
-
-      # se añade el elemento
-      case node.name
-        when "title", "h1", "h2", "h3", "h4", "h5", "h6", "p", "b", "i", "strong"
-          add_common_root_element(doc, node, $process_tags.fetch(node.name.to_sym))
-        when "table"
-          add_element_table(doc, node, $process_tags.fetch(node.name.to_sym))
-        when "ul", "ol", "select"
-          add_element_list(doc, node, $process_tags.fetch(node.name.to_sym))
-        when "input"
-          add_element_input(doc, node, $process_tags.fetch(node.name.to_sym))
-        else
-          puts 'No se encuentra implementada'
-      end
-
-    end
-
-
-
-    tags[node.name] += 1
-
-    next
-  end
-=end
-
-  # puts doc.to_s
-
-  # filename = 'exam.xml'
-  # xml = File.read(filename)
-  # doc = Nokogiri::XML(xml)
+  # Option 1 - Texto sin formatear
   # File.write(resultname, doc.to_xml(:indent => 4, :encoding => 'UTF-8'))
 
-  doc.pretty_print(DEFAULT_INDENT)
+  # Option 2 - Texto formateado (break line)
+  #doc.pretty_print(DEFAULT_INDENT)
+  #File.write(resultname, xml_pretty_content)
 
-  File.write(resultname, xml_pretty_content)
+  # Option 3 - Texto formateado (pretty)
+  xsl = Nokogiri::XSLT(File.read('..\..\resources\pretty_print.xsl'))
+  File.open(resultname, "w") { |f| f << xsl.apply_to(doc).to_s }
 
-  # xsl = Nokogiri::XSLT(File.read('..\resources\pretty_print.xsl'))
-  # File.open(resultname, "w") { |f| f << xsl.apply_to(doc).to_s }
-
-  #puts "#{tags}"
+  puts "Resumen de los tags procesados"
+  puts "#{$tags}"
 end
 
