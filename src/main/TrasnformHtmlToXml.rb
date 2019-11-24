@@ -13,10 +13,10 @@ class TrasnformHtmlToXml
   DEFAULT_INDENT = 2
 
   # Constante que contiene el fichero XML a partir del cual se generará la salida
-  PROCESS_FILE = "../../resources/result.xml"
+  PROCESS_FILE = "resources/template.xml"
 
   # Constante que contiene la plantilla XSL para el procesamiento del formato de XML
-  PRETTY_TEMPLATE = "../../resources/pretty_print.xsl"
+  PRETTY_TEMPLATE = "resources/pretty_print.xsl"
 
   # Constante que contiene el Hash de las etiquetas a procesar
   PROCESS_TAGS = {title: 'title', body: 'content', h1: 'header', h2: 'header', h3: 'header', h4: 'header',
@@ -36,7 +36,8 @@ class TrasnformHtmlToXml
   #                Valor "2" - Formateado con líneas de ruptura
   #                Valor "3" - Formateado sin líneas de ruptura
   # - output -     Ruta absoluta o relativa del fichero de salida (../../out/result.xml)
-  def initialize(input, attributes = 0, format = 3, output = "../../out/result.xml")
+  def initialize(input, attributes = "0", format = "3", output = "../../out/result.xml")
+    puts "Inicializando TrasnformHtmlToXml(input = \"#{input}\", attributes = \"#{attributes}\", format = \"#{attributes}\", output = \"#{output}\" )"
     #control de errores
     begin
       # Se abre y se parsea el HTML pasado por parámetro
@@ -56,44 +57,36 @@ class TrasnformHtmlToXml
   ##
   # Método que parsea un fichero HTML en XML
   def parserHtmltoXml
-    # Se abre el documento xml template
-    doc = parse_xml_file(PROCESS_FILE)
-
-    # Se procesa el HTML y se añaden los tags al doc
-    process_html_file(doc)
-
-    # Pinta el xml generado
-    print_xml(doc)
-
-    # Se pintan los tags procesados
-    print_count_tags
+    doc = parse_xml_file(PROCESS_FILE)  # Se abre el documento xml template
+    process_html_file(doc)  # Se procesa el HTML y se añaden los tags al doc
+    print_xml(doc)  # Pinta el xml generado
+    print_count_tags # Se pintan los tags procesados
   end
 
+  # Métodos privados
   private
 
   ##
   # Método que abre y parsea un fichero pasado por parámetro
   # - file_name - Ruta absoluta o relativa de la plantilla XML a partir de la cual se generará el fichero XML de salida
   def parse_xml_file(file_name)
-    # se abre y se crea el fichero pasado por parámetro
-    f = File.read(file_name)
-    # se devuelve un elemento Nokogiri::XML en formato UTF_8
-    Nokogiri::XML(f,nil, Encoding::UTF_8.to_s)
+    f = File.read(file_name) # se abre y se crea el fichero pasado por parámetro
+    Nokogiri::XML(f,nil, Encoding::UTF_8.to_s)  # se devuelve un elemento Nokogiri::XML en formato UTF_8
   end
 
   ##
   # Método que procesa el HTML y sa va contruyendo el XML de salida
   # - doc - Documento Nokogiri::XML de salida
   def process_html_file(doc)
-    @page.root.elements.each do |node|
-      next unless node.is_a?(Nokogiri::XML::Element)
+    @page.root.elements.each do |node| # se recorren todos los elementos de la página HTML
+      next unless node.is_a?(Nokogiri::XML::Element) # Se pasa al siguiente elemento si el nodo no es del tipo
+                                                     # (Nokogiri::XML::Element)
+      new_element = Nokogiri::XML::Node.new(node.name, doc)  # Se crea un nuevo nodo dentro del documento
+      add_attributes(node, new_element) # se añade los atributos al elemento
+      doc.root.add_child(new_element) # se añade el nuevo elemento al documento
+      parse_children(node.children, new_element) # se recorren los nodos hijos del nodo HTML
 
-      new_element = Nokogiri::XML::Node.new(node.name, doc)
-      # new_element.content = node.content
-      doc.root.add_child(new_element)
-      parse_children(node.children, new_element)
-
-      @tags[node.name] += 1
+      @tags[node.name] += 1 #Se incrementa el número de tags
     end
   end
 
@@ -107,9 +100,6 @@ class TrasnformHtmlToXml
     # se corre los hijos del nodo pasado por parámetro
     children.each do |child|
       case child
-      when Nokogiri::XML::Text
-        # no se establece el contenido
-        #child.content = child.content.strip + "A"
       when Nokogiri::XML::Element # Solo se procesan los elementos
 
         # Se comprueba que el nodo se encuentra dentro del tags a procesar
@@ -128,12 +118,16 @@ class TrasnformHtmlToXml
           when "table", "tr", "ul", "ol", "select", "form", "div"
             # Para las etiquetas de está clausula no se añade contenido
             new_element.content = ""
+            # se añade los atributos al elemento
+            add_attributes(child, new_element)
           when "input", "link", "meta", "img"
             # se añade el contenido de los tags
-            add_content_input(child, new_element)
+            add_content_attribute(child, new_element)
           else
             # se establece el contenido del hijo
             new_element.content = child.content
+            # se añade los atributos al elemento
+            add_attributes(child, new_element)
           end
 
           # Se añade el nuevo elemento al nodo procesado
@@ -147,31 +141,74 @@ class TrasnformHtmlToXml
   end
 
   ##
-  # Método que añade al documento (Nokorigi::XML) un nuevo nodo (Nokogiri::XML::Node)
-  # con el nombre "name" y el valor "value"
-  # - value - Contenido del nodo a crear
-  # - name -  Nombre del nodo a crear
-  def add_common_value_element(doc, value, name)
-    # se crea un nuevo elmento
-    new_element = Nokogiri::XML::Node.new(name, doc)
-    # se establece el contenido al elemento
-    new_element.content = value
-    # se añade el elemento como hijo
-    doc.add_child(new_element)
-  end
-
-  ##
-  # Método que añade los atgributos de nodo pasado por parámetro
-  # en el documento (Nokogiri::XML)
-  # - node - Nodo HTML procesado
-  # - doc -  Documento (Nokorigi::XML) a construir
-  def add_content_input(node, doc)
+  # Método que añade los atributos del nodo pasado por parámetro
+  # al elemento (Nokogiri::XML::Element)
+  # - node -     Nodo HTML procesado
+  # - element -  Documento (Nokorigi::XML::Element) a construir
+  def add_content_attribute(node, element)
     if (node.attributes)
       node.attributes.each do |k, v|
         # se crea el elemento attr
-        add_common_value_element(doc, v, k)
+        add_common_value_element(element, k, v)
       end
     end
+  end
+
+  ##
+  # Método que añade al elemento (Nokorigi::XML::Element) un nuevo nodo (Nokogiri::XML::Node)
+  # o atributo (Nokorigi::XML::Attr) con el nombre "name" y el valor "value"
+  # - element - Elemento a añadir el nuevo Nodo o Atributo
+  # - value - Contenido del nodo a crear
+  # - name -  Nombre del nodo a crear
+  def add_common_value_element(element, name, value)
+    if (@attributes == "1")
+      element.set_attribute(name, value)
+    else
+      # se crea un nuevo elmento
+      new_element = Nokogiri::XML::Node.new(name, element)
+      # se establece el contenido al elemento
+      new_element.content = value
+      # se añade el elemento como hijo
+      element.add_child(new_element)
+    end
+  end
+
+  ##
+  # Método que añade los atributos del nodo pasado por parámetro
+  # al elemento (Nokogiri::XML::Element)
+  # - node -     Nodo HTML procesado
+  # - element -  Documento (Nokorigi::XML::Element) a construir
+  def add_attributes(node, element)
+    if (@attributes == "1")
+      if (node.attributes)
+        node.attributes.each do |k, v|
+          element.set_attribute(k, v)
+        end
+      end
+    end
+  end
+
+  ##
+  # Método que pinta el documento (NoKorigi::XML) generado en el fichero de salida según la opción selecionada
+  # - doc - Documento (NoKorigi::XML) generado
+  def print_xml(doc)
+    case @format
+    when "1"
+      # Option 1 - Texto sin formatear
+      write_xml(doc)
+    when "2"
+      # Option 2 - Texto formateado (break line)
+      write_pretty_xml_with_break(doc)
+    when "3"
+      # Option 3 - Texto formateado (pretty)
+      write_pretty_xml(doc)
+    else
+      puts "Formato incorrecto. Se establece la Opción por defecto: 3\n"
+      # Option 3 - Texto formateado (pretty)
+      write_pretty_xml(doc)
+    end
+
+    puts "El fichero XML generado se encuentra en la ruta: #{@output}\n"
   end
 
   ##
@@ -211,7 +248,7 @@ class TrasnformHtmlToXml
       # Now, print the open tag preceded by the correct amount of indentation, then
       # recursively print this node's children (with extra indentation), and then
       # print the close tag (if there is a closing tag)
-      define_method :pretty_print do |indent=0|
+      define_method :pretty_print do |indent = 0|
         duplicate = self.dup
         duplicate.content = "\n"
         open_tag, close_tag = duplicate.to_s.split("\n")
@@ -253,29 +290,6 @@ class TrasnformHtmlToXml
   end
 
   ##
-  # Método que pinta el documento (NoKorigi::XML) generado en el fichero de salida segun la opción selecionada
-  # - doc - Documento (NoKorigi::XML) generado
-  def print_xml(doc)
-    case @format
-    when 1
-      # Option 1 - Texto sin formatear
-      write_xml(doc)
-    when 2
-      # Option 2 - Texto formateado (break line)
-      write_pretty_xml_with_break(doc)
-    when 3
-      # Option 3 - Texto formateado (pretty)
-      write_pretty_xml(doc)
-    else
-      puts "Formato incorrecto. Se establece la Opción por defecto: 3\n"
-      # Option 3 - Texto formateado (pretty)
-      write_pretty_xml(doc)
-    end
-
-    puts "El fichero generado se encuentra en la ruta: #{@output}\n"
-  end
-
-  ##
   # Método que pinta el número de Tags HTML procesados
   def print_count_tags
     puts "Resumen de los tags procesados:\n"
@@ -299,20 +313,23 @@ unless ARGV[0]
   print "                Valor '3' - Formateado sin líneas de ruptura \n"
   print " - output -     Ruta absoluta o relativa del fichero de salida (../../out/result.xml) \n"
   exit
+else
+  # Constante que define si se desea o no puntar los atributo (Por defecto no "0")
+  DEFAULT_ATTRIBUTES = "0"
+  # Constante que define el tipo de formato del XML de salida (Por defecto no "3" PRETTY)
+  DEFAULT_FORMAT = "3"
+  # Constante que define la ruta y el fichero XML de salida (Por defecto no "../../out/result.xml")
+  DEFAULT_OUTPUT = "../../out/result.xml"
+
+  # Se establecen los parámetros pasados por línea de comando
+  input = ARGV[0]
+  attributes = ARGV[1].nil? ? DEFAULT_ATTRIBUTES : ARGV[1]
+  format = ARGV[2].nil? ? DEFAULT_FORMAT : ARGV[2]
+  output = ARGV[3].nil? ? DEFAULT_OUTPUT : ARGV[3]
+
+  # Se instancia la clase que transforma el HTML al XML
+  parser = TrasnformHtmlToXml.new(input, attributes, format, output)
+  # Se invoca al método que transforma el HTML al XML
+  parser.parserHtmltoXml
 end
 
-# Se definen las variables por defecto
-DEFAULT_ATTRIBUTES = 0
-DEFAULT_FORMAT = 3
-DEFAULT_OUTPUT = "../../out/result.xml"
-
-# Se establecen los parámetros pasados por línea de comando
-input = ARGV[0]
-attributes = ARGV[1].nil? ? DEFAULT_ATTRIBUTES : ARGV[1]
-format = ARGV[2].nil? ? DEFAULT_FORMAT : ARGV[2]
-output = ARGV[3].nil? ? DEFAULT_OUTPUT : ARGV[3]
-
-# Se instancia la clase que transforma el HTML al XML
-parser = TrasnformHtmlToXml.new(input, attributes, format, output)
-# Se invoca al método que transforma el HTML al XML
-parser.parserHtmltoXml
