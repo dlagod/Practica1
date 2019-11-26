@@ -25,9 +25,17 @@ class TrasnformHtmlToXml
                    select: "select", option: "option", input: "input", link: "link", a: "link", meta: "meta",
                    div: "div", span: "span", center: "center", form: "form", nobr: "nobr", img: "image"}
 
+
   ##
-  # Contructor con parámetros
-  # - input -      Fichero o URL a pasear
+  # Contructor que inicializa el atributo tags
+  def initialize
+    # Variable miembro que contiene los tags procesados
+    @tags = Hash.new(0)
+  end
+
+  ##
+  # Método que parsea un fichero HTML en XML
+  # - input -      Fichero o URL a pasear (obligatorio)
   # - attributes - Parámetro que indica si se desean procesar los atributos o no
   #                Valor "0" - generación del XML sin atributos (default)
   #                Valor "1" - generación del XML con atributos
@@ -36,8 +44,9 @@ class TrasnformHtmlToXml
   #                Valor "2" - Formateado con líneas de ruptura
   #                Valor "3" - Formateado sin líneas de ruptura
   # - output -     Ruta absoluta o relativa del fichero de salida (../../out/result.xml)
-  def initialize(input, attributes = "0", format = "3", output = "../../out/result.xml")
-    puts "Inicializando TrasnformHtmlToXml(input = \"#{input}\", attributes = \"#{attributes}\", format = \"#{attributes}\", output = \"#{output}\" )"
+  def parserHtmltoXml(input, attributes = "0", format = "3", output = "../../out/result.xml")
+
+    puts "Inicializando TrasnformHtmlToXml(input = \"#{input}\", attributes = \"#{attributes}\", format = \"#{format}\", output = \"#{output}\" )"
     #control de errores
     begin
       # Se abre y se parsea el HTML pasado por parámetro
@@ -46,17 +55,13 @@ class TrasnformHtmlToXml
       puts "El fichero pasado por parámetro o la URL no existe: #{input}"
       exit # Se sale del programa ya que no se puede parsear el fichero o url de entrada
     end
+
+    # Inicialización de los atributos de clase
     @attributes = attributes
     @format = format
     @output = output
 
-    # Variable miembro que contiene los tags procesados
-    @tags = Hash.new(0)
-  end
-
-  ##
-  # Método que parsea un fichero HTML en XML
-  def parserHtmltoXml
+    # Métodos de transformación
     doc = parse_xml_file(PROCESS_FILE)  # Se abre el documento xml template
     process_html_file(doc)  # Se procesa el HTML y se añaden los tags al doc
     print_xml(doc)  # Pinta el xml generado
@@ -300,9 +305,9 @@ end
 
 # Se comprueba que se introduce el fichero por parámetro
 unless ARGV[0]
-  print "Es necesario pasar un fichero o una URL en el primer parámetro \n"
-  print "Para ejecutar correctamente este script es necesario pasar los siguientes parámetros \n"
-  print "ruby TransformHtmlToXml input [atrributes format output] \n"
+  print "Es necesario pasar un fichero o una URL en el primer parámetro \n\n"
+  print "Para ejecutar correctamente este script es necesario pasar los siguientes parámetros: \n\n"
+  print "ruby TransformHtmlToXml input [atrributes format output] \n\n"
   print " - input -      Fichero o URL a pasear (required) \n"
   print " - attributes - Parámetro que indica si se desean procesar los atributos o no \n"
   print "                Valor '0' - generación del XML sin atributos (default) \n"
@@ -328,8 +333,8 @@ else
   output = ARGV[3].nil? ? DEFAULT_OUTPUT : ARGV[3]
 
   # Se instancia la clase que transforma el HTML al XML
-  parser = TrasnformHtmlToXml.new(input, attributes, format, output)
+  parser = TrasnformHtmlToXml.new
   # Se invoca al método que transforma el HTML al XML
-  parser.parserHtmltoXml
+  parser.parserHtmltoXml(input, attributes, format, output)
 end
 
