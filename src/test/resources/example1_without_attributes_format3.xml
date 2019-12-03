@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+    <xml>
+       <head>
+          <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+          <title>Página de ejemplo 1</title>
+       </head>
+       <body>
+          <header> Ejemplo 1 de formato de HTML (h1)</header>
+          <header> Ejemplo 1 de formato de HTML (h2)</header>
+          <header> Ejemplo 1 de formato de HTML (h3)</header>
+          <header> Ejemplo 1 de formato de HTML (h4)</header>
+          <header> Ejemplo 1 de formato de HTML (h5)</header>
+          <header> Ejemplo 1 de formato de HTML (h6)</header>
+          <para> En esta sección se expondrá ejemplos de los principales tipos de etiquetas HTML 5</para>
+          <table>
+             <row>
+                <col>Prácticas</col>
+                <col>Puntuación</col>
+             </row>
+             <row>
+                <col>Práctica_1</col>
+                <col>15%</col>
+             </row>
+             <row>
+                <col>Práctica_2</col>
+                <col>15%</col>
+             </row>
+             <row>
+                <col>Práctica_3</col>
+                <col>15%</col>
+             </row>
+             <row>
+                <col>Práctica_4</col>
+                <col>15%</col>
+             </row>
+             <row>
+                <col>Trabajo de Investigación</col>
+                <col>40%</col>
+             </row>
+          </table>
+          <div>
+             <bold> Lista de trabajos</bold>
+             <list>
+                <value>Práctica 1</value>
+                <value>Práctica 2</value>
+                <value>Práctica 3</value>
+                <value>Práctica 4</value>
+                <value>Trabajo de Investigación</value>
+             </list>
+          </div>
+          <div>
+             <bold> Lista de trabajos ordenados</bold>
+             <list>
+                <value>Práctica 1</value>
+                <value>Práctica 2</value>
+                <value>Práctica 3</value>
+                <value>Práctica 4</value>
+                <value>Trabajo de Investigación</value>
+             </list>
+          </div>
+          <para>
+             Etiqueta Select
+             <cursive>Etiqueta Select</cursive>
+          </para>
+          <select>
+             <option value="default">Selecciona una opción ...</option>
+             <option value="1">Opción 1</option>
+             <option value="2">Opción 2</option>
+             <option value="3">Opción 3</option>
+          </select>
+          <para>Escoger genéro</para>
+          <para>
+             Femenino Masculino
+             <input type="radio" name="sex" value="woman"/>
+             <input type="radio" name="sex" value="men"/>
+          </para>
+          <para>
+             Intereses: Autos Deportes Videojuegos
+             <input type="checkbox" name="cb-autos" value="autos"/>
+             <input type="checkbox" name="cb-deportes" value="deportes"/>
+             <input type="checkbox" name="cb-videojuegos" value="videojuegos"/>
+          </para>
+       </body>
+    </xml>

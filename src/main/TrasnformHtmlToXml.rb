@@ -13,10 +13,10 @@ class TrasnformHtmlToXml
   DEFAULT_INDENT = 2
 
   # Constante que contiene el fichero XML a partir del cual se generará la salida
-  PROCESS_FILE = "resources/template.xml"
+  PROCESS_FILE = "src/main/resources/template.xml"
 
   # Constante que contiene la plantilla XSL para el procesamiento del formato de XML
-  PRETTY_TEMPLATE = "resources/pretty_print.xsl"
+  PRETTY_TEMPLATE = "src/main/resources/pretty_print.xsl"
 
   # Constante que contiene el Hash de las etiquetas a procesar
   PROCESS_TAGS = {title: 'title', body: 'content', h1: 'header', h2: 'header', h3: 'header', h4: 'header',
@@ -40,26 +40,27 @@ class TrasnformHtmlToXml
   #                Valor "0" - generación del XML sin atributos (default)
   #                Valor "1" - generación del XML con atributos
   # - format -     Parámetro que indica el formato de salida del XML generado
-  #                Valor "1" - Sin formato (default)
+  #                Valor "1" - Sin formato
   #                Valor "2" - Formateado con líneas de ruptura
-  #                Valor "3" - Formateado sin líneas de ruptura
-  # - output -     Ruta absoluta o relativa del fichero de salida (../../out/result.xml)
-  def parserHtmltoXml(input, attributes = "0", format = "3", output = "../../out/result.xml")
+  #                Valor "3" - Formateado sin líneas de ruptura (default)
+  # - output -     Ruta absoluta o relativa del fichero de salida (out/result.xml)
+  def parserHtmltoXml(input, attributes = "0", format = "3", output = "out/result.xml")
 
-    puts "Inicializando TrasnformHtmlToXml(input = \"#{input}\", attributes = \"#{attributes}\", format = \"#{format}\", output = \"#{output}\" )"
     #control de errores
     begin
       # Se abre y se parsea el HTML pasado por parámetro
       @page = Nokogiri::HTML(open(input), nil, Encoding::UTF_8.to_s)
     rescue
-      puts "El fichero pasado por parámetro o la URL no existe: #{input}"
-      exit # Se sale del programa ya que no se puede parsear el fichero o url de entrada
+      raise "El fichero pasado por parámetro o la URL no existe: #{input}"
+     # exit # Se sale del programa ya que no se puede parsear el fichero o url de entrada
     end
 
     # Inicialización de los atributos de clase
     @attributes = attributes
     @format = format
     @output = output
+
+    puts "Inicializando TrasnformHtmlToXml(input = \"#{input}\", attributes = \"#{attributes}\", format = \"#{format}\", output = \"#{output}\" )"
 
     # Métodos de transformación
     doc = parse_xml_file(PROCESS_FILE)  # Se abre el documento xml template
@@ -301,40 +302,3 @@ class TrasnformHtmlToXml
     puts "#{@tags}"
   end
 end
-
-
-# Se comprueba que se introduce el fichero por parámetro
-unless ARGV[0]
-  print "Es necesario pasar un fichero o una URL en el primer parámetro \n\n"
-  print "Para ejecutar correctamente este script es necesario pasar los siguientes parámetros: \n\n"
-  print "ruby TransformHtmlToXml input [atrributes format output] \n\n"
-  print " - input -      Fichero o URL a pasear (required) \n"
-  print " - attributes - Parámetro que indica si se desean procesar los atributos o no \n"
-  print "                Valor '0' - generación del XML sin atributos (default) \n"
-  print "                Valor '1' - generación del XML con atributos \n"
-  print " - format -     Parámetro que indica el formato de salida del XML generado \n"
-  print "                Valor '1' - Sin formato (default) \n"
-  print "                Valor '2' - Formateado con líneas de ruptura \n"
-  print "                Valor '3' - Formateado sin líneas de ruptura \n"
-  print " - output -     Ruta absoluta o relativa del fichero de salida (../../out/result.xml) \n"
-  exit
-else
-  # Constante que define si se desea o no puntar los atributo (Por defecto no "0")
-  DEFAULT_ATTRIBUTES = "0"
-  # Constante que define el tipo de formato del XML de salida (Por defecto no "3" PRETTY)
-  DEFAULT_FORMAT = "3"
-  # Constante que define la ruta y el fichero XML de salida (Por defecto no "../../out/result.xml")
-  DEFAULT_OUTPUT = "../../out/result.xml"
-
-  # Se establecen los parámetros pasados por línea de comando
-  input = ARGV[0]
-  attributes = ARGV[1].nil? ? DEFAULT_ATTRIBUTES : ARGV[1]
-  format = ARGV[2].nil? ? DEFAULT_FORMAT : ARGV[2]
-  output = ARGV[3].nil? ? DEFAULT_OUTPUT : ARGV[3]
-
-  # Se instancia la clase que transforma el HTML al XML
-  parser = TrasnformHtmlToXml.new
-  # Se invoca al método que transforma el HTML al XML
-  parser.parserHtmltoXml(input, attributes, format, output)
-end
-
