@@ -113,4 +113,69 @@ class TrasnformHtmlToXmlTest < Minitest::Test
     # Se comprueba si se ha producido o no la excepción
     assert_equal(true, exception)
   end
+
+  ##
+  # Método de test que verifica la salida de los atributos incorrectos
+  def test_error_attributes
+    exception = false
+    #Se invoca al método parserHtmltoXml
+    begin
+      @transform.parserHtmltoXml("examples/example1.html", "3", "1", "out/example1_error_attributes.xml")
+    rescue
+      # Se comprueba que el fichero es el mismo que el generado
+      exception = true
+    end
+
+    # Se comprueba si se ha producido o no la excepción
+    assert_equal(true, exception)
+  end
+
+  ##
+  # Método de test que verifica la salida del formato incorrecto
+  def test_error_format
+    exception = false
+    #Se invoca al método parserHtmltoXml
+    begin
+      @transform.parserHtmltoXml("examples/example1.html", "0", "4", "out/example1_error_attributes.xml")
+    rescue
+      # Se comprueba que el fichero es el mismo que el generado
+      exception = true
+    end
+
+    # Se comprueba si se ha producido o no la excepción
+    assert_equal(true, exception)
+  end
+
+  ##
+  # Método de test que verifica la existencia del fichero XML de salida
+  def test_error_output
+    exception = false
+    #Se invoca al método parserHtmltoXml
+    begin
+      @transform.parserHtmltoXml("examples/example1.html", "0", "3", nil)
+    rescue
+      # Se comprueba que el fichero es el mismo que el generado
+      exception = true
+    end
+
+    # Se comprueba si se ha producido o no la excepción
+    assert_equal(true, exception)
+  end
+
+  ##
+  # Método de test que verifica la existencia de la ruta del fichero XML de salida
+  def test_error_output_bad_directory
+    exception = false
+    #Se invoca al método parserHtmltoXml
+    begin
+      @transform.parserHtmltoXml("examples/example1.html", "0", "3", "ou/result.xml")
+    rescue
+      # Se comprueba que el fichero es el mismo que el generado
+      exception = true
+    end
+
+    # Se comprueba si se ha producido o no la excepción
+    assert_equal(true, exception)
+  end
+
 end

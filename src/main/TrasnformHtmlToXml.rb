@@ -51,14 +51,33 @@ class TrasnformHtmlToXml
       # Se abre y se parsea el HTML pasado por parámetro
       @page = Nokogiri::HTML(open(input), nil, Encoding::UTF_8.to_s)
     rescue
+      # se lanza una excepción
       raise "El fichero pasado por parámetro o la URL no existe: #{input}"
-     # exit # Se sale del programa ya que no se puede parsear el fichero o url de entrada
     end
 
-    # Inicialización de los atributos de clase
-    @attributes = attributes
-    @format = format
-    @output = output
+    # Se valida el parámetro attributes
+    if ((attributes  == "0") or (attributes == "1"))
+      @attributes = attributes
+    else
+      # se lanza una excepción
+      raise "Valor del parámetro 'attributes' no soportado: '#{attributes}' Valores soportados ['0','1']"
+    end
+
+    # Se valida el parámetro format
+    if ((format  == "1") or (format == "2") or (format == "3"))
+      @format = format
+    else
+      # se lanza una excepción
+      raise "Valor del parámetro 'format' no soportado: '#{format}' Valores soportados ['1','2','3']"
+    end
+
+    # Validación del parámetro output
+    if (output.nil?)
+      # se lanza una excepción
+      raise "Valor del parámetro 'output' no soportado: '#{output}'. Se espera la ruta absoluta del fichero XML destino"
+    else
+      @output = output
+    end
 
     puts "Inicializando TrasnformHtmlToXml(input = \"#{input}\", attributes = \"#{attributes}\", format = \"#{format}\", output = \"#{output}\" )"
 
@@ -226,8 +245,7 @@ class TrasnformHtmlToXml
       # Escribe el contenido del documento en el fichero de salida
       File.write(@output, doc.to_xml(:indent => 4, :encoding => 'UTF-8'))
     rescue
-      puts "El fichero de salida 'output' pasado por parámetro no existe: #{@output}"
-      exit # Se sale del programa ya que no se puede crear el fichero de salida
+      raise "El fichero de salida 'output' pasado por parámetro no existe: #{@output}"
     end
   end
 
@@ -259,10 +277,8 @@ class TrasnformHtmlToXml
         duplicate.content = "\n"
         open_tag, close_tag = duplicate.to_s.split("\n")
 
-        # puts (" " * indent) + open_tag
         xml_pretty_content += (" " * indent) + open_tag + "\r"
         self.children.select(&:should_print?).each { |child| child.is_a?(Nokogiri::XML::Element) ? child.pretty_print(indent + DEFAULT_INDENT) : xml_pretty_content += (" " * (indent + DEFAULT_INDENT)) + child.content + "\r"}
-        # puts (" " * indent) + close_tag if close_tag
         xml_pretty_content += (" " * indent) + close_tag + "\r" if close_tag
       end
     end
@@ -273,8 +289,7 @@ class TrasnformHtmlToXml
       # Escribe el contenido del documento en el fichero de salida aplicando una plantilla XSLT
       File.write(@output, xml_pretty_content)
     rescue
-      puts "El fichero de salida 'output' pasado por parámetro no existe: #{@output}"
-      exit # Se sale del programa ya que no se puede crear el fichero de salida
+      raise "El fichero de salida 'output' pasado por parámetro no existe: #{@output}"
     end
   end
 
@@ -290,8 +305,7 @@ class TrasnformHtmlToXml
       # Escribe el contenido del documento en el fichero de salida aplicando una plantilla XSLT
       File.open(@output, "w") { |f| f << xsl.apply_to(doc).to_s }
     rescue
-      puts "El fichero de salida 'output' pasado por parámetro no existe: #{@output}"
-      exit # Se sale del programa ya que no se puede crear el fichero de salida
+      raise "El fichero de salida 'output' pasado por parámetro no existe: #{@output}"
     end
   end
 

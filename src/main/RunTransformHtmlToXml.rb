@@ -20,7 +20,7 @@ else
   DEFAULT_ATTRIBUTES = "0"
   # Constante que define el tipo de formato del XML de salida (Por defecto no "3" PRETTY)
   DEFAULT_FORMAT = "3"
-  # Constante que define la ruta y el fichero XML de salida (Por defecto no "../../out/result.xml")
+  # Constante que define la ruta y el fichero XML de salida (Por defecto no "out/result.xml")
   DEFAULT_OUTPUT = "out/result.xml"
 
   # Se establecen los parámetros pasados por línea de comando
