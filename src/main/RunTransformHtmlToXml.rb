@@ -1,4 +1,4 @@
-require_relative 'TrasnformHtmlToXml'
+require_relative 'TransformHtmlToXml'
 
 # Se comprueba que se introduce el fichero por parámetro
 unless ARGV[0]
@@ -30,7 +30,7 @@ else
   output = ARGV[3].nil? ? DEFAULT_OUTPUT : ARGV[3]
 
   # Se instancia la clase que transforma el HTML al XML
-  parser = TrasnformHtmlToXml.new
+  parser = TransformHtmlToXml.new
   # Se invoca al método que transforma el HTML al XML
   parser.parserHtmltoXml(input, attributes, format, output)
 end

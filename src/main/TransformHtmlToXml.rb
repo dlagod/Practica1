@@ -7,7 +7,7 @@ require 'open-uri'
 # Clase que transforma un HTML en XML.
 # Para ello, utiliza la librería "Nokogiri::XML" y "Nokogiri::HTML".
 #
-class TrasnformHtmlToXml
+class TransformHtmlToXml
 
   # Constante que indica el número de espacios de indentación por defecto
   DEFAULT_INDENT = 2

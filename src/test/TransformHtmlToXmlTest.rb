@@ -1,14 +1,14 @@
 require 'minitest/autorun'
-require_relative '../../src/main/TrasnformHtmlToXml'
+require_relative '../../src/main/TransformHtmlToXml'
 
 
-class TrasnformHtmlToXmlTest < Minitest::Test
+class TransformHtmlToXmlTest < Minitest::Test
 
   ##
   # Método que se ejecuta al invocar los test
   def setup # ó before
     # Se invoca a la clase TransformHtmlToXml
-    @transform = TrasnformHtmlToXml.new
+    @transform = TransformHtmlToXml.new
   end
 
   ##
